@@ -109,7 +109,7 @@ class GeneralArenaAdapter(DefaultDataAdapter):
         for subset_name, samples in datasets.items():
             dataset = DictDataLoader(
                 dict_list=samples,
-                limit=self.limit,
+                limit=self._get_subset_limit(subset_name),
                 shuffle=self.shuffle,
                 repeats=self.repeats,
                 sample_fields=self.record_to_sample

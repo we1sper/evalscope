@@ -101,8 +101,8 @@ class TaskConfig(BaseArgument):
     eval_config: Union[str, Dict, None] = None
     """Additional evaluation configuration parameters."""
 
-    limit: Optional[Union[int, float]] = None
-    """Maximum number of samples to evaluate. Can be int (count) or float (fraction)."""
+    limit: Optional[Union[int, float, Dict[str, Union[int, float]]]] = None
+    """Maximum number of samples to evaluate. Can be int (count), float (fraction), or dict mapping subset names to per-subset limits."""
 
     eval_batch_size: int = 1
     """Batch size / concurrency for evaluation, applied across all stages:
@@ -186,12 +186,26 @@ class TaskConfig(BaseArgument):
     @field_validator('limit', mode='before')
     @classmethod
     def _validate_limit(cls, v):
-        if v is not None:
-            v = parse_int_or_float(v)
-            if v < 0:
-                raise ValueError(f'`limit` must be >= 0 or None, got {v}.')
-            if v == 0:
+        if v is None:
+            return None
+        if isinstance(v, dict):
+            if not v:
                 return None
+            result = {}
+            for key, val in v.items():
+                if not isinstance(key, str):
+                    raise ValueError(f'`limit` dict keys must be subset name strings, got {type(key).__name__}: {key}.')
+                val = parse_int_or_float(val)
+                if val < 0:
+                    raise ValueError(f'`limit` value for subset "{key}" must be >= 0, got {val}.')
+                if val != 0:
+                    result[key] = val
+            return result if result else None
+        v = parse_int_or_float(v)
+        if v < 0:
+            raise ValueError(f'`limit` must be >= 0 or None, got {v}.')
+        if v == 0:
+            return None
         return v
 
     @field_validator('eval_config', mode='before')

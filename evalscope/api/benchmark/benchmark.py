@@ -129,9 +129,9 @@ class DataAdapter(LLMJudgeMixin, SandboxMixin, ABC):
         return self._benchmark_meta.output_types
 
     @property
-    def limit(self) -> Optional[Union[int, float]]:
+    def limit(self) -> Optional[Union[int, float, Dict[str, Union[int, float]]]]:
         """
-        Return the limit for the benchmark.
+        Return the limit for the benchmark. Can be an int, float, or a dict mapping subset names to per-subset limits.
         """
         return self._task_config.limit
 

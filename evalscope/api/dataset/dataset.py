@@ -306,7 +306,7 @@ class DatasetDict:
         cls,
         dataset: Dataset,
         subset_list: List[str],
-        limit: Optional[Union[int, float]] = None,
+        limit: Optional[Union[int, float, Dict[str, Union[int, float]]]] = None,
         repeats: int = 1
     ) -> 'DatasetDict':
         """
@@ -315,8 +315,9 @@ class DatasetDict:
         Args:
             dataset (Dataset): The dataset to wrap in a DatasetDict.
             subset_list (List[str]): List of subset keys to include.
-            limit (int | float | None): Optional limit on number of samples per subset.
+            limit (int | float | dict | None): Optional limit on number of samples per subset.
                 If int, limits to that many samples. If float, limits to that fraction of samples.
+                If dict, maps subset names to per-subset limits.
 
         Returns:
             DatasetDict: A new DatasetDict containing the provided dataset.
@@ -336,11 +337,18 @@ class DatasetDict:
         for key, samples in data_dict.items():
             if key not in subset_list:
                 continue
-            # Apply limit if specified
+            # Resolve limit for this subset
+            subset_limit = None
             if limit is not None:
-                if isinstance(limit, float):
-                    limit = int(len(samples) * limit)
-                total_limit = limit * repeats
+                if isinstance(limit, dict):
+                    subset_limit = limit.get(key)
+                else:
+                    subset_limit = limit
+            # Apply limit if specified
+            if subset_limit is not None:
+                if isinstance(subset_limit, float):
+                    subset_limit = int(len(samples) * subset_limit)
+                total_limit = subset_limit * repeats
                 samples = samples[:total_limit]
             cur_dataset = MemoryDataset(samples, name=dataset.name)
             # Reindex the dataset to ensure consistent IDs and group IDs

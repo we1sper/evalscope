@@ -40,6 +40,25 @@ class ParseStrArgsAction(argparse.Action):
         setattr(namespace, self.dest, arg_dict)
 
 
+def _parse_limit_arg(value: str):
+    """Parse a ``--limit`` argument: accepts a JSON dict or a plain number."""
+    try:
+        result = json.loads(value)
+        if isinstance(result, dict):
+            return result
+        # JSON parsed a bare number (e.g. "10" or "0.5")
+        return float(result)
+    except (json.JSONDecodeError, ValueError):
+        pass
+    try:
+        return float(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(
+            f"Invalid limit value: '{value}'. Expected a number (int/float) or a JSON dict "
+            f"(e.g. '{{\"subset_a\": 10, \"subset_b\": 20}}')."
+        )
+
+
 def add_argument(parser: argparse.ArgumentParser):
     # yapf: disable
     # Model-related arguments
@@ -66,7 +85,7 @@ def add_argument(parser: argparse.ArgumentParser):
                         choices=[EvalBackend.NATIVE, EvalBackend.OPEN_COMPASS, EvalBackend.VLM_EVAL_KIT, EvalBackend.RAG_EVAL])  # noqa: E501
     parser.add_argument('--eval-config', type=str, required=False, help='The eval task config file path for evaluation backend.')  # noqa: E501
     parser.add_argument('--eval-batch-size', type=int, default=1, help='The batch size for evaluation.')
-    parser.add_argument('--limit', type=float, default=None, help='Max evaluation samples num for each subset.')
+    parser.add_argument('--limit', type=_parse_limit_arg, default=None, help='Max evaluation samples num for each subset. Can be an int, float (fraction), or JSON dict mapping subset names to per-subset limits (e.g. \'{"subset_a": 10, "subset_b": 20}\').')
     parser.add_argument('--repeats', type=int, default=1, help='Number of times to repeat the dataset items for k-metrics.')  # noqa: E501
 
     # Cache and working directory arguments

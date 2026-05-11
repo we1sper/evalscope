@@ -208,12 +208,19 @@ def compute_eval_total_count(task_config: 'TaskConfig') -> Optional[int]:
             sample_count = subset_count_map.get(subset)
             if sample_count is None:
                 continue
-            # Apply limit per subset first
+            # Resolve per-subset limit
+            subset_limit = None
             if limit is not None:
-                if isinstance(limit, float):
-                    effective = int(sample_count * limit)
+                if isinstance(limit, dict):
+                    subset_limit = limit.get(subset)
                 else:
-                    effective = min(sample_count, int(limit))
+                    subset_limit = limit
+            # Apply limit per subset first
+            if subset_limit is not None:
+                if isinstance(subset_limit, float):
+                    effective = int(sample_count * subset_limit)
+                else:
+                    effective = min(sample_count, int(subset_limit))
             else:
                 effective = sample_count
             # Then multiply by repeats

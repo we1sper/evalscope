@@ -231,7 +231,7 @@ class NeedleHaystackAdapter(DefaultDataAdapter):
 
                 dataset = DictDataLoader(
                     dict_list=records,
-                    limit=self.limit,
+                    limit=self._get_subset_limit(subset_name),
                     repeats=self.repeats,
                     sample_fields=self.record_to_sample,
                     shuffle=self.shuffle,
