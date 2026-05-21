@@ -229,17 +229,17 @@ class DefaultDataAdapter(DataAdapter):
             dataset_dict = DatasetDict(subset_dict)
         return dataset_dict
 
-    def _get_subset_limit(self, subset: str) -> Optional[Union[int, float]]:
+    def _get_subset_limit(self, subset_name: str) -> Optional[Union[int, float]]:
         """Resolve the effective limit for a given subset.
 
-        If ``self.limit`` is a dict, returns the value for the subset key
-        (or None if the subset is not in the dict). Otherwise returns the
+        If ``self.limit`` is a dict, returns the value for the subset name
+        (or None if the subset name is not in the dict). Otherwise, returns the
         scalar limit value directly.
         """
         if self.limit is None:
             return None
         if isinstance(self.limit, dict):
-            return self.limit.get(subset)
+            return self.limit.get(subset_name)
         return self.limit
 
     def load_subset(self, subset: str, data_loader: Type[DataLoader]) -> Dataset:
@@ -264,7 +264,7 @@ class DefaultDataAdapter(DataAdapter):
             subset=subset_name,
             sample_fields=self.record_to_sample,  # Custom sample conversion function
             filter_func=self.sample_filter,
-            limit=self._get_subset_limit(subset) if not self.reformat_subset else None,  # Limit number of samples if specified
+            limit=self._get_subset_limit(subset_name) if not self.reformat_subset else None,  # Limit number of samples if specified
             repeats=self.repeats,  # Number of repetitions for each sample
             shuffle=self.shuffle,  # Shuffle dataset if enabled
             shuffle_choices=self.shuffle_choices,  # Shuffle choices if requested
